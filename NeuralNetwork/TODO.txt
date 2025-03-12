@@ -1,0 +1,13 @@
+# [TODO]
+
+ - For Thursday: write a short code segment that evaluates our model. Research evaluation methods and metrics for regression problems.
+ - Generally:
+    - Research and figure out how we want to measure performance, efficiency, costs.
+    - The training loss is way too high, this can be caused by bad feature selection (likely). Also, we should probably remove outliers/extreme values from our dataset, as some predictions during training are extremely off.
+    - Hyperparameter optimization. Research tuning methods, I'd prefer bayesian optimization over grid/random search, this will give us the best results (also takes longer). If we choose this, it can be done using Optuna. Always save the best set of hyperparamteres in a json file.
+    - Retraining the model with the best set of hyperparameters, and evaluate it if we find it good enough. Always save the model after training (if good enough).
+
+# INFO
+
+ - Training is way faster on tabular data than I thought, but I have rented a GPU to make training even faster. Will come in handy with tuning. 
+ - If you have some code that takes too much time to run, I can feed it to the GPU session.
