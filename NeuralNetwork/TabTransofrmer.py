@@ -13,8 +13,8 @@ np.random.seed(SEED)
 torch.manual_seed(SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed(SEED)
-
-df = pd.read_csv("../Price_prediction_data.csv")
+# /Users/tonko/Code/ML/Price_prediction_data.csv
+df = pd.read_csv("./Price_prediction_data.csv")
 print("Full dataset length:", len(df))
 
 # Only use 1M rows
