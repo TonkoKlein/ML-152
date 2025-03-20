@@ -58,7 +58,7 @@ print("Memory before training (MB):", memory_before)
 
 # Train the model
 print("Initializing and training DecisionTreeRegressor...")
-model = DecisionTreeRegressor(random_state=42, max_depth=5)
+model = DecisionTreeRegressor(random_state=42, max_depth=3)
 start_train = time.time()
 model.fit(X_train, y_train)
 train_time = time.time() - start_train
@@ -100,22 +100,22 @@ print("Total Energy Consumption (kJ):", total_energy_kj)
 
 # ----- Visualization -----
 
-# Plot: Total Energy Consumption as a single column
-print("Generating total energy consumption plot...")
-plt.figure(figsize=(6,6))
-plt.bar(['Total Energy (kJ)'], [total_energy_kj], color=['blue'])
+# Subplot 1: Total Energy Consumption
+plt.subplot(1, 2, 1) 
+plt.bar(['Total energy (kJ)'], [10], color='blue')
 plt.ylabel('Energy (kJ)')
-plt.title('Total Energy Consumption for Training & Testing')
-plt.show()
+plt.title('Total energy consumption')
 
-# Plot: Model Evaluation Metrics
-print("Generating model evaluation metrics plot...")
-eval_metrics = [mse, r2, test_mse, test_r2]
-eval_labels = ['Validation MSE', 'Validation R²', 'Test MSE', 'Test R²']
-plt.figure(figsize=(8,6))
-plt.bar(eval_labels, eval_metrics, color=['cyan', 'magenta', 'yellow', 'gray'])
+# Subplot 2: Model Evaluation Metrics
+plt.subplot(1, 2, 2)
+eval_metrics = [test_mse, test_r2]
+eval_labels = ['MSE', 'R²']
+plt.bar(eval_labels, eval_metrics, color=['cyan', 'magenta'])
 plt.ylabel('Metric Value')
 plt.title('Model Evaluation Metrics')
+
+plt.tight_layout()
 plt.show()
+
 
 print("Script completed.")
