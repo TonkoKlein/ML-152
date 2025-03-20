@@ -9,9 +9,9 @@ from sklearn.preprocessing import StandardScaler
 pd.set_option("display.max_columns", None)
 pd.set_option("display.width", 1000)
 
-
+# 1. Read CSV
 rdw_df = pd.read_csv(
-    "./Data.csv",
+    "../../Data.csv",
     low_memory=False,
     nrows=5000000,
     dtype={
@@ -25,12 +25,12 @@ rdw_df = pd.read_csv(
 
 print("CSV READ")
 
-# Convert the date column to datetime
+# 2. Convert the date column to datetime
 rdw_df["Datum eerste toelating"] = pd.to_datetime(
     rdw_df["Datum eerste toelating"], errors="coerce"
 )
 
-
+# 3. Subset your desired columns
 selected_columns = [
     "Kenteken",
     "Voertuigsoort",
@@ -54,15 +54,14 @@ features_label_df.columns = [
     "Price",
 ]
 
-
+# 4. Convert numeric columns, ensuring correct dtype
 numeric_columns = ["Number_of_Cylinders", "Vehicle_Mass", "Max_Speed", "Price"]
 for col in numeric_columns:
     features_label_df[col] = pd.to_numeric(
         features_label_df[col], errors="coerce"
     ).astype("float64")
 
-
-# 4. Extract Year, Month, Day from Registration Date
+# 5. Extract Year, Month, Day from Registration Date
 features_label_df["Reg_Year"] = features_label_df[
     "First_Registration_Date"
 ].dt.year.astype("float64")
@@ -75,10 +74,25 @@ features_label_df["Reg_Day"] = features_label_df[
 
 features_label_df.drop(columns=["First_Registration_Date"], inplace=True)
 
+# Extend the list of numeric columns to include newly created ones
 numeric_columns.extend(["Reg_Year", "Reg_Month", "Reg_Day"])
 
+# 6. Drop rows with any missing values
 features_label_df.dropna(inplace=True)
 
+# 7. Remove outliers (extreme values) in numeric columns using the IQR method
+for col in numeric_columns:
+    Q1 = features_label_df[col].quantile(0.25)
+    Q3 = features_label_df[col].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    features_label_df = features_label_df[
+        (features_label_df[col] >= lower_bound)
+        & (features_label_df[col] <= upper_bound)
+    ]
+
+# 8. Encode categorical columns
 cat_cols = ["Vehicle_Type", "Make"]
 for cat_col in cat_cols:
     encoder = LabelEncoder()
@@ -87,21 +101,24 @@ for cat_col in cat_cols:
         features_label_df[cat_col].astype(str)
     )
 
+# 9. Remove License Plate (if not needed for modeling)
 if "License_Plate" in features_label_df.columns:
     features_label_df.drop(columns=["License_Plate"], inplace=True)
 
+# 10. Scale numeric columns
 scaler = StandardScaler()
 features_label_df[numeric_columns] = scaler.fit_transform(
     features_label_df[numeric_columns]
 )
 
-# Reorder columns, puts price at the end
+# 11. Reorder columns, place "Price" as the last column
 all_cols = [col for col in features_label_df.columns if col != "Price"]
 all_cols.append("Price")
 features_label_df = features_label_df[all_cols]
 
+# 12. Print info and save final preprocessed data
 print(
-    "Number of rows in final dataset after dropping missing values:",
+    "Number of rows in final dataset after dropping missing values and outliers:",
     len(features_label_df),
 )
 print("Number of columns:", features_label_df.shape[1])
