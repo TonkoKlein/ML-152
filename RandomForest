@@ -14,7 +14,11 @@ def get_dynamic_power_usage():
     cpu_usage = psutil.cpu_percent(interval=1)
     print("CPU usage measured:", cpu_usage)
     num_cores = psutil.cpu_count(logical=True)
-    cpu_freq = psutil.cpu_freq()
+    try:
+        cpu_freq = psutil.cpu_freq()
+    except Exception as e:
+        print("Error reading CPU frequency:", e)
+        cpu_freq = None
     if cpu_freq:
         base_freq = cpu_freq.min
         max_freq = cpu_freq.max
@@ -120,9 +124,3 @@ plt.title('Model Evaluation Metrics')
 
 plt.tight_layout()
 plt.show()
-# ---- End of added visualization code ----
-
-test_mse = mean_squared_error(y_test, y_test_pred)
-test_r2 = r2_score(y_test, y_test_pred)
-print("Test MSE:", test_mse)
-print("Test R²:", test_r2)
