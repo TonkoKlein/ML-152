@@ -6,6 +6,37 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
+# ---- Added code for energy consumption measurement ----
+import psutil
+
+def get_dynamic_power_usage():
+    print("Measuring CPU usage with psutil.cpu_percent(interval=1)...")
+    cpu_usage = psutil.cpu_percent(interval=1)
+    print("CPU usage measured:", cpu_usage)
+    num_cores = psutil.cpu_count(logical=True)
+    cpu_freq = psutil.cpu_freq()
+    if cpu_freq:
+        base_freq = cpu_freq.min
+        max_freq = cpu_freq.max
+        current_freq = cpu_freq.current
+    else:
+        base_freq, max_freq, current_freq = 1000, 3000, 2000
+        print("Using default CPU frequencies.")
+    print(f"CPU frequencies - Base: {base_freq} MHz, Current: {current_freq} MHz, Max: {max_freq} MHz")
+    
+    base_power_per_core = 5    # Watts at base frequency
+    max_power_per_core = 25    # Watts at max frequency
+    freq_factor = (current_freq - base_freq) / (max_freq - base_freq) if max_freq > base_freq else 0.5
+    estimated_power = num_cores * (base_power_per_core + freq_factor * (max_power_per_core - base_power_per_core) * (cpu_usage / 100))
+    print("Estimated power consumption (W):", estimated_power)
+    return estimated_power, cpu_usage
+
+# Measure dynamic CPU power consumption before training
+CPU_POWER_WATTS, cpu_usage_percent = get_dynamic_power_usage()
+print("Estimated CPU Power Consumption (W):", CPU_POWER_WATTS)
+print("CPU Utilization During Sampling (%):", cpu_usage_percent)
+# ---- End of added energy consumption code ----
+
 # 1. Load the preprocessed CSV file
 data = pd.read_csv("/Users/laurens/Documents/Price_prediction_data.csv")
 
@@ -58,6 +89,38 @@ start_pred_test = time.time()
 y_test_pred = rf_model.predict(X_test)
 test_pred_time = time.time() - start_pred_test
 print(f"Test Prediction Time: {test_pred_time:.4f} seconds")
+
+test_mse = mean_squared_error(y_test, y_test_pred)
+test_r2 = r2_score(y_test, y_test_pred)
+print("Test MSE:", test_mse)
+print("Test R²:", test_r2)
+
+# ---- Added energy consumption and visualization ----
+# Compute total energy consumption in kilojoules for the whole algorithm (training + both predictions)
+total_time = train_time + val_pred_time + test_pred_time
+total_energy_kj = (CPU_POWER_WATTS * total_time) / 1000
+print("Total Energy Consumption (kJ):", total_energy_kj)
+
+# ----- Visualization -----
+plt.figure(figsize=(12, 5))
+
+# Subplot 1: Total Energy Consumption
+plt.subplot(1, 2, 1)
+plt.bar(['Total Energy (kJ)'], [total_energy_kj], color='blue')
+plt.ylabel('Energy (kJ)')
+plt.title('Total Energy Consumption')
+
+# Subplot 2: Model Evaluation Metrics (Test set)
+plt.subplot(1, 2, 2)
+eval_metrics = [test_mse, test_r2]
+eval_labels = ['Test MSE', 'Test R²']
+plt.bar(eval_labels, eval_metrics, color=['cyan', 'magenta'])
+plt.ylabel('Metric Value')
+plt.title('Model Evaluation Metrics')
+
+plt.tight_layout()
+plt.show()
+# ---- End of added visualization code ----
 
 test_mse = mean_squared_error(y_test, y_test_pred)
 test_r2 = r2_score(y_test, y_test_pred)
